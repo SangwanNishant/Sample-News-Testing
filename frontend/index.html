@@ -7,16 +7,42 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>News Sentiment Analyzer</h1>
-    </header>
+    <!-- Signup/Login Section -->
+    <div id="authContainer" class="auth-container">
+        <h2 id="authTitle">Login</h2>
+        
+        <!-- Login Form (Default Visible) -->
+        <form id="loginForm">
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Enter a keyword">
-        <button id="searchBtn">Search</button>
+        <!-- Signup Form (Initially Hidden) -->
+        <form id="signupForm" class="hidden">
+            <input type="text" id="signupUsername" placeholder="Username" required>
+            <input type="password" id="signupPassword" placeholder="Password" required>
+            <button type="submit">Signup</button>
+        </form>
+
+        <!-- Toggle Login/Signup -->
+        <p id="toggleAuth">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
     </div>
 
-    <div id="articlesFeed" class="news-container"></div>
+    <!-- Core Project (Initially Hidden) -->
+    <div id="mainContainer" class="hidden">
+        <header>
+            <h1>News Sentiment Analyzer</h1>
+            <button id="logoutBtn">Logout</button>
+        </header>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Enter a keyword">
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <div id="articlesFeed" class="news-container"></div>
+    </div>
 
     <script src="main.js"></script>
 </body>

@@ -4,22 +4,101 @@ body {
     color: #333;
     font-family: Arial, sans-serif;
     transition: background-color 0.3s, color 0.3s;
+    text-align: center;
 }
 
+/* Header */
 header {
     text-align: center;
     padding: 15px;
     background-color: #222;
     color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
 }
 
+#logoutBtn {
+    background-color: #D32F2F;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+/* Auth Container */
+.auth-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    margin: 50px auto;
+    text-align: center;
+}
+
+/* Fix Alignment */
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Hide the Signup Form by Default */
+#signupForm {
+    display: none;
+}
+
+.auth-container input {
+    width: 90%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.auth-container button {
+    width: 94%;
+    background-color: #555;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+/* Toggle Link */
+#toggleAuth {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#toggleAuth a {
+    color: #007BFF;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Hide Main Container Initially */
+.hidden {
+    display: none;
+}
+
+/* Search Container */
 .search-container {
     text-align: center;
     margin: 20px 0;
 }
 
 #searchInput {
-    width: 50%; /* Increased width */
+    width: 50%;
     padding: 12px;
     font-size: 18px;
     border-radius: 10px;
@@ -37,6 +116,7 @@ header {
     margin-left: 10px;
 }
 
+/* News Container */
 .news-container {
     display: flex;
     flex-wrap: wrap;
@@ -48,7 +128,7 @@ header {
 .news-card {
     background-color: white;
     padding: 20px;
-    border-radius: 20px; /* Curved corners */
+    border-radius: 20px;
     box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.1);
     width: 320px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -57,7 +137,7 @@ header {
 
 /* Hover Effect */
 .news-card:hover {
-    transform: scale(1.1); /* Enlarges the card */
+    transform: scale(1.1);
     box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -83,14 +163,13 @@ header {
 
 /* Colors for Sentiments */
 .sentiment-positive {
-    background-color: #4CAF50; /* Green */
+    background-color: #4CAF50;
 }
 
 .sentiment-negative {
-    background-color: #D32F2F; /* Red */
+    background-color: #D32F2F;
 }
 
 .sentiment-neutral {
-    background-color: #757575; /* Gray */
+    background-color: #757575;
 }
-
