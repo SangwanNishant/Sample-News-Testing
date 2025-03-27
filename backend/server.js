@@ -152,7 +152,7 @@ app.get('/api/saved-news', verifyToken, async (req, res) => {
 });
 
 // Remove Saved News
-app.delete('/api/remove-news', verifyToken, async (req, res) => {
+app.delete('/api/delete-news', verifyToken, async (req, res) => {
   const { url } = req.body;
 
   try {
@@ -183,5 +183,5 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 9090;
+const PORT = process.env.PORT || 1000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

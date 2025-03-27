@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = loginPassword.value.trim();
 
         try {
-            const response = await fetch("http://localhost:9090/api/login", {
+            const response = await fetch("http://localhost:1000/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = signupPassword.value.trim();
 
         try {
-            const response = await fetch("http://localhost:9090/api/signup", {
+            const response = await fetch("http://localhost:1000/api/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
         articlesFeed.innerHTML = "";
 
         try {
-            const response = await fetch(`http://localhost:9090/api/news?q=${query}`);
+            const response = await fetch(`http://localhost:1000/api/news?q=${query}`);
             const newsData = await response.json();
 
             newsData.articles.slice(0, 7).forEach(async (news) => {
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("http://localhost:9090/api/save-news", {
+            const response = await fetch("http://localhost:1000/api/save-news", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const response = await fetch("http://localhost:9090/api/saved-news", {
+            const response = await fetch("http://localhost:1000/api/saved-news", {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -202,19 +202,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function deleteSavedArticle(newsId) {
+    async function deleteSavedArticle(newsUrl) {
         try {
             const token = localStorage.getItem("token");
             if (!token) {
                 alert("You need to log in to delete news!");
                 return;
             }
-
-            const response = await fetch(`http://localhost:9090/api/delete-news/${newsId}`, {
+    
+            const response = await fetch("http://localhost:1000/api/delete-news", {  // No newsId in URL
                 method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ url: newsUrl })  // Send URL in body (backend expects this)
             });
-
+    
             const data = await response.json();
             if (response.ok) {
                 alert("News deleted successfully!");
@@ -226,10 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Error deleting saved news:", error);
         }
     }
+    
 
     async function analyzeSentiment(newsText) {
         try {
-            const response = await fetch("http://localhost:9090/api/analyze", {
+            const response = await fetch("http://localhost:1000/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: newsText })
