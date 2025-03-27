@@ -182,50 +182,38 @@ document.addEventListener("DOMContentLoaded", () => {
     
 
     async function fetchSavedArticles() {
-        savedArticles.innerHTML = "";
-
+        const token = localStorage.getItem("token"); // Get token from local storage
+    
+        if (!token) {
+            console.error("No token found, user might not be logged in.");
+            return;
+        }
+    
         try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                console.warn("No token found, cannot fetch saved news.");
-                return;
-            }
-
             const response = await fetch(`${BACKEND_URL}/api/saved-news`, {
                 method: "GET",
-                headers: { "Authorization": `Bearer ${token}` }
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
             });
-
+    
             const data = await response.json();
-            if (!Array.isArray(data)) {
-                console.warn("Saved news is not an array:", data);
-                savedArticles.innerHTML = "<p>No saved articles found.</p>";
-                return;
+    
+            if (response.ok) {
+                if (Array.isArray(data.savedNews)) {
+                    displaySavedArticles(data.savedNews);
+                } else {
+                    console.error("Saved news is not an array:", data);
+                }
+            } else {
+                console.error("Error fetching saved news:", data.error);
+                alert(data.error || "Failed to fetch saved news.");
             }
-
-            data.forEach(news => {
-                const newsCard = document.createElement("div");
-                newsCard.className = "news-card";
-                newsCard.innerHTML = `
-                    <h3>${news.title}</h3>
-                    <a href="${news.url}" target="_blank">Read more</a>
-                    <button class="delete-btn" data-id="${news._id}">Delete</button>
-                `;
-
-                savedArticles.appendChild(newsCard);
-            });
-
-            document.querySelectorAll(".delete-btn").forEach(btn => {
-                btn.addEventListener("click", async (event) => {
-                    const newsId = event.target.getAttribute("data-id");
-                    await deleteSavedArticle(newsId);
-                });
-            });
-
         } catch (error) {
             console.error("Error fetching saved news:", error);
         }
     }
+    
 
     async function deleteSavedArticle(articleId) {
         const token = localStorage.getItem("token");
