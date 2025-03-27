@@ -8,7 +8,7 @@ import { fetch } from 'undici'; // Better alternative for fetch in Node.js 18+
 import getSentimentAnalysis from './huggingFaceApi.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // Connect to MongoDB
