@@ -144,7 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("You need to log in to save news!");
             return;
         }
-
+    
+        const newsData = {
+            title: article.title,
+            description: article.description || "No description available",
+            url: article.url
+        };
+    
         try {
             const response = await fetch(`${BACKEND_URL}/api/save-news`, {
                 method: "POST",
@@ -152,10 +158,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(article)
+                body: JSON.stringify(newsData)
             });
-
-            const data = await response.json();
+    
+            let data;
+            try {
+                data = await response.json(); // Handle case if response is not JSON
+            } catch {
+                data = { error: "Server returned an invalid response" };
+            }
+    
             if (response.ok) {
                 alert("News saved successfully!");
                 fetchSavedArticles();
@@ -164,8 +176,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (error) {
             console.error("Error saving news:", error);
+            alert("An error occurred while saving news.");
         }
     }
+    
 
     async function fetchSavedArticles() {
         savedArticles.innerHTML = "";
@@ -213,34 +227,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function deleteSavedArticle(newsUrl) {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("You need to log in to delete news!");
-                return;
-            }
+    async function deleteNews(newsId) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("You need to log in to delete news!");
+            return;
+        }
     
-            const response = await fetch(`${BACKEND_URL}/api/delete-news`, {  // No newsId in URL
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/delete-news/${newsId}`, {
                 method: "DELETE",
                 headers: {
-                    "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({ url: newsUrl })  // Send URL in body (backend expects this)
+                }
             });
     
-            const data = await response.json();
             if (response.ok) {
                 alert("News deleted successfully!");
+    
+                // Remove from UI
+                document.getElementById(`news-${newsId}`)?.remove();
+    
+                // Re-fetch saved articles to update UI
                 fetchSavedArticles();
             } else {
+                const data = await response.json();
                 alert(data.error || "Failed to delete news");
             }
         } catch (error) {
-            console.error("Error deleting saved news:", error);
+            console.error("Error deleting news:", error);
+            alert("An error occurred while deleting news.");
         }
     }
+    
     
 
     async function analyzeSentiment(newsText) {

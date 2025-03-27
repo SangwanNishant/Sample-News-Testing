@@ -91,6 +91,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY; // Use GNews API Key from .env
+console.log("Using GNews API Key:", process.env.GNEWS_API_KEY);
 
 app.get("/api/news", async (req, res) => {
     try {
