@@ -20,6 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loginForm.style.display = "block";
     signupForm.style.display = "none";
 
+    const BACKEND_URL = "https://sample-news-testing.onrender.com";
+
+
     toggleAuth.addEventListener("click", (e) => {
         e.preventDefault();
         if (loginForm.style.display === "block") {
@@ -41,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = loginPassword.value.trim();
 
         try {
-            const response = await fetch("http://localhost:1000/api/login", {
+            const response = await fetch(`${BACKEND_URL}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -68,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = signupPassword.value.trim();
 
         try {
-            const response = await fetch("http://localhost:1000/api/signup", {
+            const response = await fetch(`${BACKEND_URL}/api/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -93,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         articlesFeed.innerHTML = "";
 
         try {
-            const response = await fetch(`http://localhost:1000/api/news?q=${query}`);
+            const response = await fetch(`${BACKEND_URL}/api/news?q=${query}`);
             const newsData = await response.json();
 
             newsData.articles.slice(0, 7).forEach(async (news) => {
@@ -135,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("http://localhost:1000/api/save-news", {
+            const response = await fetch(`${BACKEND_URL}/api/save-news`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -166,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const response = await fetch("http://localhost:1000/api/saved-news", {
+            const response = await fetch(`${BACKEND_URL}/api/saved-news`, {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -210,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
     
-            const response = await fetch("http://localhost:1000/api/delete-news", {  // No newsId in URL
+            const response = await fetch(`${BACKEND_URL}/api/delete-news`, {  // No newsId in URL
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -234,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function analyzeSentiment(newsText) {
         try {
-            const response = await fetch("http://localhost:1000/api/analyze", {
+            const response = await fetch(`${BACKEND_URL}/api/analyze`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: newsText })
