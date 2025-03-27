@@ -114,6 +114,10 @@ app.get("/api/news", async (req, res) => {
 
 // Save News Article
 app.post('/api/save-news', verifyToken, async (req, res) => {
+  if (!req.user || !req.user.userId) {
+    return res.status(403).json({ error: 'Unauthorized: Invalid or missing token' });
+  }
+
   const { title, url, source, publishedAt } = req.body;
 
   try {
@@ -129,10 +133,10 @@ app.post('/api/save-news', verifyToken, async (req, res) => {
     }
 
     user.savedNews.push({
-      title,
+      title: title || "No Title", // Ensure title is not undefined
       url,
-      source: sourceName,  // Ensure it's a string
-      publishedAt: new Date(publishedAt)
+      source: sourceName || "Unknown Source", // Ensure source is not undefined
+      publishedAt: publishedAt ? new Date(publishedAt) : new Date() // Ensure date is valid
     });
 
     await user.save();
