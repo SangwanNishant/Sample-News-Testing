@@ -8,7 +8,11 @@ import { fetch } from 'undici'; // Better alternative for fetch in Node.js 18+
 import getSentimentAnalysis from './huggingFaceApi.js';
 
 const app = express();
-app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: "*", // Allow all origins for testing
+  methods: ["GET", "POST", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -86,24 +90,26 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Fetch News
-app.get('/api/news', async (req, res) => {
-  const query = req.query.q || 'latest';
+const GNEWS_API_KEY = process.env.GNEWS_API_KEY; // Use GNews API Key from .env
 
-  try {
-    const response = await fetch(`https://newsapi.org/v2/everything?q=${query}&apiKey=${process.env.NEWS_API_KEY}`);
-    
-    if (!response.ok) return res.status(response.status).json({ error: 'Failed to fetch news' });
+app.get("/api/news", async (req, res) => {
+    try {
+        const query = req.query.q || "latest";
+        const url = `https://gnews.io/api/v4/search?q=${query}&token=${GNEWS_API_KEY}&lang=en&max=10`;
 
-    const data = await response.json();
-    if (!data || !data.articles) return res.status(500).json({ error: 'Invalid news data received' });
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`GNews API Error: ${response.statusText}`);
+        }
 
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching news:', error);
-    res.status(500).json({ error: 'Failed to fetch news' });
-  }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error fetching news:", error);
+        res.status(500).json({ error: "Failed to fetch news" });
+    }
 });
+
 
 // Save News Article
 app.post('/api/save-news', verifyToken, async (req, res) => {

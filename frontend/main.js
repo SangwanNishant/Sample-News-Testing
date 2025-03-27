@@ -94,41 +94,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchAndDisplayNews(query = "latest") {
         articlesFeed.innerHTML = "";
-
+    
         try {
             const response = await fetch(`${BACKEND_URL}/api/news?q=${query}`);
             const newsData = await response.json();
-
+    
+            if (!newsData.articles || newsData.articles.length === 0) {
+                articlesFeed.innerHTML = "<p>No news found.</p>";
+                return;
+            }
+    
             newsData.articles.slice(0, 7).forEach(async (news) => {
                 const sentiment = await analyzeSentiment(news.title);
-
+    
                 const sentimentClass = sentiment === "POSITIVE" ? "sentiment-positive" :
                                        sentiment === "NEGATIVE" ? "sentiment-negative" :
                                        "sentiment-neutral";
-
+    
                 const newsCard = document.createElement("div");
                 newsCard.className = "news-card";
                 newsCard.innerHTML = `
                     <h3>${news.title}</h3>
-                    <p>${news.description || "No description available"}</p>
+                    <p>${news.description ? news.description : "No description available."}</p>
                     <a href="${news.url}" target="_blank">Read More</a>
                     <span class="sentiment-box ${sentimentClass}">${sentiment}</span>
                 `;
-
+    
                 const saveBtn = document.createElement("button");
                 saveBtn.innerText = "Save";
                 saveBtn.classList.add("save-btn");
                 saveBtn.addEventListener("click", async () => {
                     await saveNews(news);
                 });
-
+    
                 newsCard.appendChild(saveBtn);
                 articlesFeed.appendChild(newsCard);
             });
+    
         } catch (error) {
             console.error("Error fetching news:", error);
+            articlesFeed.innerHTML = "<p>Failed to load news.</p>";
         }
     }
+    
 
     async function saveNews(article) {
         const token = localStorage.getItem("token");
