@@ -1,10 +1,12 @@
 /* Light Mode */
 body {
-    background-color: #f5f5dc; /* Beige */
+    background-color: #f5f5dc;
     color: #333;
     font-family: Arial, sans-serif;
     transition: background-color 0.3s, color 0.3s;
     text-align: center;
+    margin: 0;
+    padding: 0;
 }
 
 /* Header */
@@ -29,23 +31,35 @@ header {
     font-size: 16px;
 }
 
-/* Auth Container */
+/* Auth Container (Centered Login & Signup) */
+#authContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Authentication Box */
 .auth-container {
     background-color: white;
     padding: 20px;
     border-radius: 15px;
     box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    margin: 50px auto;
+    width: 320px; /* Adjusted width */
+    max-width: 90%;
     text-align: center;
 }
 
-/* Fix Alignment */
+/* Ensure Title is Visible */
+.auth-container h2 {
+    margin-bottom: 10px;
+}
+
+/* Forms inside Auth Container */
 .auth-container form {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100%;
 }
 
 /* Hide the Signup Form by Default */
@@ -53,17 +67,18 @@ header {
     display: none;
 }
 
+/* Inputs & Buttons inside Auth Box */
 .auth-container input {
-    width: 90%;
+    width: 100%;
     padding: 10px;
     margin: 5px 0;
     border: 2px solid #555;
     border-radius: 8px;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 .auth-container button {
-    width: 94%;
     background-color: #555;
     color: white;
     padding: 10px;
@@ -72,12 +87,14 @@ header {
     border-radius: 8px;
     font-size: 16px;
     margin-top: 10px;
+    width: 100%;
 }
 
-/* Toggle Link */
+/* Toggle Link (Login/Signup Switch) */
 #toggleAuth {
     margin-top: 10px;
     font-size: 14px;
+    text-align: center;
 }
 
 #toggleAuth a {
@@ -161,6 +178,24 @@ header {
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Save Button */
+.save-btn {
+    background-color: #007BFF;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+}
+
+.save-btn:hover {
+    background-color: #0056b3;
+}
+
 /* Colors for Sentiments */
 .sentiment-positive {
     background-color: #4CAF50;
@@ -172,4 +207,47 @@ header {
 
 .sentiment-neutral {
     background-color: #757575;
+}
+
+/* Saved News Container */
+#savedArticles {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Delete Button */
+.delete-btn {
+    background-color: #D32F2F;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+}
+
+.delete-btn:hover {
+    background-color: #b71c1c;
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+    #searchInput {
+        width: 80%;
+    }
+
+    .news-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .news-card {
+        width: 90%;
+    }
 }

@@ -14,13 +14,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
     const articlesFeed = document.getElementById("articlesFeed");
+    const savedArticles = document.getElementById("savedArticles");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // Show Login Form by Default
     loginForm.style.display = "block";
     signupForm.style.display = "none";
 
-    // Toggle Between Login & Signup
     toggleAuth.addEventListener("click", (e) => {
         e.preventDefault();
         if (loginForm.style.display === "block") {
@@ -36,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Function to Handle Login
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const username = loginUsername.value.trim();
@@ -54,7 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem("token", data.token);
                 authContainer.style.display = "none";
                 mainContainer.style.display = "block";
-                fetchAndDisplayNews(); // Fetch news after login
+                fetchAndDisplayNews();
+                fetchSavedArticles();
             } else {
                 alert(data.message || "Login failed!");
             }
@@ -63,25 +62,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Function to Handle Signup
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const username = signupUsername.value.trim();
         const password = signupPassword.value.trim();
-    
+
         try {
             const response = await fetch("http://localhost:9090/api/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
             });
-    
+
             const data = await response.json();
             if (response.ok) {
-                localStorage.setItem("token", data.token); // Auto login
+                localStorage.setItem("token", data.token);
                 authContainer.style.display = "none";
                 mainContainer.style.display = "block";
                 fetchAndDisplayNews();
+                fetchSavedArticles();
             } else {
                 alert(data.message || "Signup failed!");
             }
@@ -89,11 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Error during signup:", error);
         }
     });
-    
 
-    // Function to Fetch & Display News
     async function fetchAndDisplayNews(query = "latest") {
-        articlesFeed.innerHTML = ""; // Clear previous results
+        articlesFeed.innerHTML = "";
 
         try {
             const response = await fetch(`http://localhost:9090/api/news?q=${query}`);
@@ -103,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const sentiment = await analyzeSentiment(news.title);
 
                 const sentimentClass = sentiment === "POSITIVE" ? "sentiment-positive" :
-                                       sentiment === "NEGATIVE" ? "sentiment-negative" : 
+                                       sentiment === "NEGATIVE" ? "sentiment-negative" :
                                        "sentiment-neutral";
 
                 const newsCard = document.createElement("div");
@@ -111,9 +108,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 newsCard.innerHTML = `
                     <h3>${news.title}</h3>
                     <p>${news.description || "No description available"}</p>
+                    <a href="${news.url}" target="_blank">Read More</a>
                     <span class="sentiment-box ${sentimentClass}">${sentiment}</span>
                 `;
 
+                const saveBtn = document.createElement("button");
+                saveBtn.innerText = "Save";
+                saveBtn.classList.add("save-btn");
+                saveBtn.addEventListener("click", async () => {
+                    await saveNews(news);
+                });
+
+                newsCard.appendChild(saveBtn);
                 articlesFeed.appendChild(newsCard);
             });
         } catch (error) {
@@ -121,7 +127,106 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Function to Analyze Sentiment
+    async function saveNews(article) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("You need to log in to save news!");
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:9090/api/save-news", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(article)
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("News saved successfully!");
+                fetchSavedArticles();
+            } else {
+                alert(data.error || "Failed to save news");
+            }
+        } catch (error) {
+            console.error("Error saving news:", error);
+        }
+    }
+
+    async function fetchSavedArticles() {
+        savedArticles.innerHTML = "";
+
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                console.warn("No token found, cannot fetch saved news.");
+                return;
+            }
+
+            const response = await fetch("http://localhost:9090/api/saved-news", {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+            if (!Array.isArray(data)) {
+                console.warn("Saved news is not an array:", data);
+                savedArticles.innerHTML = "<p>No saved articles found.</p>";
+                return;
+            }
+
+            data.forEach(news => {
+                const newsCard = document.createElement("div");
+                newsCard.className = "news-card";
+                newsCard.innerHTML = `
+                    <h3>${news.title}</h3>
+                    <a href="${news.url}" target="_blank">Read more</a>
+                    <button class="delete-btn" data-id="${news._id}">Delete</button>
+                `;
+
+                savedArticles.appendChild(newsCard);
+            });
+
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", async (event) => {
+                    const newsId = event.target.getAttribute("data-id");
+                    await deleteSavedArticle(newsId);
+                });
+            });
+
+        } catch (error) {
+            console.error("Error fetching saved news:", error);
+        }
+    }
+
+    async function deleteSavedArticle(newsId) {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("You need to log in to delete news!");
+                return;
+            }
+
+            const response = await fetch(`http://localhost:9090/api/delete-news/${newsId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("News deleted successfully!");
+                fetchSavedArticles();
+            } else {
+                alert(data.error || "Failed to delete news");
+            }
+        } catch (error) {
+            console.error("Error deleting saved news:", error);
+        }
+    }
+
     async function analyzeSentiment(newsText) {
         try {
             const response = await fetch("http://localhost:9090/api/analyze", {
@@ -138,24 +243,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Search Button Click Event
     searchBtn.addEventListener("click", () => {
         const query = searchInput.value.trim();
         if (query) fetchAndDisplayNews(query);
     });
 
-    // Logout Functionality
     logoutBtn.addEventListener("click", () => {
         localStorage.removeItem("token");
-        mainContainer.style.display = "none"; // Hide main app
-        authContainer.style.display = "block"; // Show login/signup
+        mainContainer.style.display = "none";
+        authContainer.style.display = "block";
     });
 
-    // Check if User is Logged In
     const token = localStorage.getItem("token");
     if (token) {
         authContainer.style.display = "none";
         mainContainer.style.display = "block";
-        fetchAndDisplayNews(); // Fetch news if user is already logged in
+        fetchAndDisplayNews();
+        fetchSavedArticles();
     }
 });
