@@ -163,22 +163,21 @@ app.get('/api/saved-news', verifyToken, async (req, res) => {
 });
 
 // Remove Saved News
-app.delete('/api/delete-news', verifyToken, async (req, res) => {
-  const { url } = req.body;
-
+app.delete('/api/delete-news/:id', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+      const user = await User.findById(req.user.userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
 
-    user.savedNews = user.savedNews.filter(news => news.url !== url);
-    await user.save();
+      user.savedNews = user.savedNews.filter(news => news._id.toString() !== req.params.id);
+      await user.save();
 
-    res.json({ message: 'News removed', savedNews: user.savedNews });
+      res.json({ message: "News deleted successfully" });
   } catch (error) {
-    console.error('Error removing news:', error);
-    res.status(500).json({ error: 'Server error' });
+      console.error("Error deleting news:", error);
+      res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // Sentiment Analysis
 app.post('/api/analyze', async (req, res) => {

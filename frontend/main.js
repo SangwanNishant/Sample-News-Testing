@@ -227,38 +227,35 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function deleteNews(newsId) {
+    async function deleteSavedArticle(articleId) {
         const token = localStorage.getItem("token");
+    
         if (!token) {
-            alert("You need to log in to delete news!");
+            alert("You need to log in to delete saved news!");
             return;
         }
     
         try {
-            const response = await fetch(`${BACKEND_URL}/api/delete-news/${newsId}`, {
+            const response = await fetch(`${BACKEND_URL}/api/delete-news/${articleId}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             });
     
+            const data = await response.json();
+    
             if (response.ok) {
                 alert("News deleted successfully!");
-    
-                // Remove from UI
-                document.getElementById(`news-${newsId}`)?.remove();
-    
-                // Re-fetch saved articles to update UI
-                fetchSavedArticles();
+                fetchSavedArticles();  // Refresh saved news
             } else {
-                const data = await response.json();
                 alert(data.error || "Failed to delete news");
             }
         } catch (error) {
             console.error("Error deleting news:", error);
-            alert("An error occurred while deleting news.");
         }
     }
+    
     
     
 
