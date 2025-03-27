@@ -140,16 +140,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function saveNews(article) {
         const token = localStorage.getItem("token");
+    
         if (!token) {
             alert("You need to log in to save news!");
             return;
         }
-    
-        const newsData = {
-            title: article.title,
-            description: article.description || "No description available",
-            url: article.url
-        };
     
         try {
             const response = await fetch(`${BACKEND_URL}/api/save-news`, {
@@ -158,27 +153,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(newsData)
+                body: JSON.stringify(article)
             });
     
-            let data;
-            try {
-                data = await response.json(); // Handle case if response is not JSON
-            } catch {
-                data = { error: "Server returned an invalid response" };
-            }
+            const data = await response.json();
     
             if (response.ok) {
                 alert("News saved successfully!");
                 fetchSavedArticles();
             } else {
-                alert(data.error || "Failed to save news");
+                console.error("Error saving news:", data.error);
+                alert(data.error || "Failed to save news.");
             }
         } catch (error) {
             console.error("Error saving news:", error);
-            alert("An error occurred while saving news.");
         }
     }
+    
     
 
     async function fetchSavedArticles() {

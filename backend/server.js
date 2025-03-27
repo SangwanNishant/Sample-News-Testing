@@ -158,17 +158,20 @@ app.post('/api/save-news', verifyToken, async (req, res) => {
 
 
 // Get Saved News
-app.get('/api/saved-news', verifyToken, async (req, res) => {
+app.get("/api/saved-news", verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('savedNews');
-    if (!user) return res.status(404).json({ error: 'User not found' });
+      const user = await User.findById(req.user.userId);
+      if (!user) {
+          return res.status(404).json({ error: "User not found" });
+      }
 
-    res.json(user.savedNews);
+      res.json(user.savedNews);  // ✅ Return only the saved news array
   } catch (error) {
-    console.error('Error fetching saved news:', error);
-    res.status(500).json({ error: 'Server error' });
+      console.error("Error fetching saved news:", error);
+      res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // Remove Saved News
 app.delete('/api/delete-news/:id', verifyToken, async (req, res) => {
