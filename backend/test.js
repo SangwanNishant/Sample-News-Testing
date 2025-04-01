@@ -1,29 +1,25 @@
-import fetch from "node-fetch";
-import dotenv from "dotenv";
-dotenv.config();
+import nodemailer from 'nodemailer';
+import 'dotenv/config';
 
-const API_KEY = process.env.OPENROUTER_API_KEY;
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD
+  }
+});
 
-async function testOpenRouter() {
-    try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: "mistral",
-                messages: [{ role: "user", content: "Summarize this text: The stock market crashed." }],
-                temperature: 0.7
-            })
-        });
+const mailOptions = {
+  from: process.env.SMTP_EMAIL,
+  to: 'depito9673@dizigg.com', // Replace with a test email
+  subject: 'Test Email from Nodemailer',
+  text: 'If you received this, Gmail SMTP is working!'
+};
 
-        const data = await response.json();
-        console.log("OpenRouter API Response:", data);
-    } catch (error) {
-        console.error("Error testing OpenRouter API:", error);
-    }
-}
-
-testOpenRouter();
+transporter.sendMail(mailOptions, (error, info) => {
+  if (error) {
+    console.error('Error sending email:', error);
+  } else {
+    console.log('Email sent:', info.response);
+  }
+});

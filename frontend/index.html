@@ -13,14 +13,15 @@
         
         <!-- Login Form -->
         <form id="loginForm">
-            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="text" id="loginIdentifier" placeholder="Username or Email" required> <!-- Unified field -->
             <input type="password" id="loginPassword" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
 
-        <!-- Signup Form -->
+        <!-- Signup Form -->    
         <form id="signupForm" class="hidden">
             <input type="text" id="signupUsername" placeholder="Username" required>
+            <input type="email" id="signupEmail" placeholder="Email" required>
             <input type="password" id="signupPassword" placeholder="Password" required>
             <button type="submit">Signup</button>
         </form>
@@ -43,9 +44,6 @@
 
         <h2>Latest News</h2>
         <div id="articlesFeed" class="news-container"></div>
-
-        <h2>Saved Articles</h2>
-        <div id="savedArticles" class="news-container"></div>
     </div>
 
     <script src="main.js"></script>
