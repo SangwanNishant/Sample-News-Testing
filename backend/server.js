@@ -46,12 +46,20 @@ mongoose.connect(process.env.MONGO_URI)
         process.exit(1);
     });
 
+// User Schema with verificationCode and verified fields
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+    verificationCode: { type: String, required: true },  // New field for verification code
+    verified: { type: Boolean, default: false }  // Field to mark if the user is verified
 });
 const User = mongoose.model('User', UserSchema);
+
+// Utility function to generate a 6-digit code
+const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();  // Generates a 6-digit code
+};
 
 // ✅ Email sending function with proper error handling
 const sendEmail = async (mailOptions) => {
@@ -65,60 +73,89 @@ const sendEmail = async (mailOptions) => {
     }
 };
 
-// ✅ Signup API - Now with full debug logs
+// ✅ Signup API - Now with email verification
 app.post('/api/signup', async (req, res) => {
-  const { username, email, password } = req.body;
-  // Log the request body to check if it is correctly received
-  console.log('📩 Received Signup Data:', req.body);
+    const { username, email, password } = req.body;
 
-  console.log(`📩 Signup request for ${email}`);
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
 
-  if (!username || !email || !password) {
-      console.log('❌ Missing signup fields');
-      return res.status(400).json({ error: 'All fields are required' });
-  }
+    try {
+        // Check if the user already exists
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email or Username already taken' });
+        }
 
-  try {
-      console.log('✅ Checking if user already exists...');
-      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-      if (existingUser) {
-          console.log(`❌ Email ${email} or Username ${username} already exists`);
-          return res.status(400).json({ error: 'Email or Username already taken' });
-      }
+        // Generate a verification code
+        const verificationCode = generateVerificationCode();
 
-      console.log(`✅ User ${username} does not exist, proceeding with creation`);
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new User({ username, email, password: hashedPassword });
+        // Create new user with verification code and 'verified' set to false
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword,
+            verificationCode,
+            verified: false
+        });
 
-      await newUser.save();
-      console.log(`✅ User ${username} created successfully, now sending email`);
+        await newUser.save();
 
-      const mailOptions = {
-          from: process.env.SMTP_EMAIL,
-          to: `${email}`,
-          subject: 'Welcome to News Sentiment Analyzer!',
-          text: `Hi ${username},\n\nThank you for signing up! We're excited to have you on board.\n\nBest regards,\nNews Sentiment Analyzer Team`
-      };
+        // Send the verification code to the user's email
+        const mailOptions = {
+            from: process.env.SMTP_EMAIL,
+            to: email,
+            subject: 'Email Verification Code',
+            text: `Hi ${username},\n\nPlease use the following code to verify your email: ${verificationCode}\n\nBest regards,\nNews Sentiment Analyzer Team`
+        };
 
-      // Log before sending email
-      console.log('📧 Sending confirmation email...');
-      const emailSent = await sendEmail(mailOptions);
-      if (!emailSent) {
-          console.log('❌ Email sending failed');
-          return res.status(500).json({ error: "Email sending failed" });
-      }
+        const emailSent = await sendEmail(mailOptions);
+        if (!emailSent) {
+            return res.status(500).json({ error: "Email sending failed" });
+        }
 
-      // Generate JWT token
-      const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // Send success response with message
+        res.status(200).json({ message: "Signup successful. Please check your email for the verification code." });
+    } catch (error) {
+        console.error('❌ Signup error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
-      console.log(`✅ Email sent successfully to ${email}, user created, sending token`);
+// ✅ Email verification API
+app.post('/api/verify-email', async (req, res) => {
+    const { email, code } = req.body;
 
-      return res.status(200).json({ message: "User created successfully, email sent", token });
-  } catch (error) {
-      console.error('❌ Signup error:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-  }
+    if (!email || !code) {
+        return res.status(400).json({ error: "Email and verification code are required" });
+    }
+
+    try {
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if the code matches
+        if (user.verificationCode !== code) {
+            return res.status(400).json({ error: "Invalid verification code" });
+        }
+
+        // Mark the user as verified and remove the verification code
+        user.verified = true;
+        user.verificationCode = undefined;  // Clear the verification code
+        await user.save();
+
+        res.status(200).json({ message: "Email verified successfully!" });
+    } catch (error) {
+        console.error("❌ Verification error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 
 // ✅ Login API with debug logs

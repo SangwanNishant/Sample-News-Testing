@@ -13,7 +13,7 @@
         
         <!-- Login Form -->
         <form id="loginForm">
-            <input type="text" id="loginIdentifier" placeholder="Username or Email" required> <!-- Unified field -->
+            <input type="text" id="loginIdentifier" placeholder="Username or Email" required>
             <input type="password" id="loginPassword" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
@@ -25,6 +25,16 @@
             <input type="password" id="signupPassword" placeholder="Password" required>
             <button type="submit">Signup</button>
         </form>
+
+        <!-- Verification Code Form -->
+        <div id="verificationContainer" class="hidden">
+            <p>A 6-digit verification code has been sent to your email. Enter it below:</p>
+            <form id="verificationForm">
+                <input type="text" id="verificationCode" placeholder="Enter code" required>
+                <button type="submit">Verify</button>
+            </form>
+            <p>Didn't receive the code? <a href="#" id="resendCode">Resend</a></p>
+        </div>
 
         <!-- Toggle Login/Signup -->
         <p id="toggleAuth">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
