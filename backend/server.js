@@ -51,7 +51,7 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    verificationCode: { type: String, required: true },  // New field for verification code
+    verificationCode: { type: String},  // New field for verification code
     verified: { type: Boolean, default: false }  // Field to mark if the user is verified
 });
 const User = mongoose.model('User', UserSchema);
@@ -128,33 +128,48 @@ app.post('/api/signup', async (req, res) => {
 
 // ✅ Email verification API
 app.post('/api/verify-email', async (req, res) => {
-    const { email, code } = req.body;
-
-    if (!email || !code) {
-        return res.status(400).json({ error: "Email and verification code are required" });
-    }
-
     try {
-        // Find user by email
+        const { email, code } = req.body;
+
+        console.log("📥 Received Verification Request:", { email, code });
+
+        if (!email || !code || code.length !== 6) {
+            console.log("❌ Invalid code format received.");
+            return res.status(400).json({ error: "Invalid code. Please enter a 6-digit code." });
+        }
+
         const user = await User.findOne({ email });
+
         if (!user) {
+            console.log(`❌ User not found for email: ${email}`);
             return res.status(404).json({ error: "User not found" });
         }
 
-        // Check if the code matches
-        if (user.verificationCode !== code) {
+        console.log("🔍 Stored Code:", user.verificationCode, "| Entered Code:", code);
+
+        // 🚨 Fix: Ensure `verificationCode` is not undefined
+        if (!user.verificationCode) {
+            console.log("❌ User does not have a stored verification code.");
+            return res.status(400).json({ error: "Verification code expired or not found. Please request a new one." });
+        }
+
+        // Convert both to strings to avoid type mismatch
+        if (String(user.verificationCode) !== String(code)) {
+            console.log("❌ Verification failed: Incorrect code");
             return res.status(400).json({ error: "Invalid verification code" });
         }
 
-        // Mark the user as verified and remove the verification code
+        console.log("✅ Code matched, verifying user...");
         user.verified = true;
-        user.verificationCode = undefined;  // Clear the verification code
+        user.verificationCode = undefined; // Clear the code after verification
         await user.save();
 
+        console.log("✅ User verified successfully!");
         res.status(200).json({ message: "Email verified successfully!" });
+
     } catch (error) {
         console.error("❌ Verification error:", error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 

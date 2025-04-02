@@ -23,8 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
     verificationContainer.style.display = "none";
     authContainer.appendChild(verificationContainer);
 
-    const verificationCodeInput = document.getElementById("verificationCode");
-    const verifyCodeBtn = document.getElementById("verifyCodeBtn");
+    authContainer.appendChild(verificationContainer); // ✅ Now it's in the DOM
+
+    // Select AFTER appending
+    const verificationCodeInput = verificationContainer.querySelector("#verificationCode");
+    const verifyCodeBtn = verificationContainer.querySelector("#verifyCodeBtn");
+
 
     const BACKEND_URL = "https://sample-news-testing.onrender.com";
     let pendingUserEmail = ""; // Store email for verification
@@ -78,34 +82,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+
+    console.log("📌 Debugging Input Field:", verificationCodeInput);
+    console.log("📌 Input Field Value:", verificationCodeInput?.value);
+
+
     verifyCodeBtn.addEventListener("click", async () => {
         const code = verificationCodeInput.value.trim();
+        console.log("🔢 Entered Code:", code, "| Length:", code.length); 
+        
         if (code.length !== 6) {
             alert("Invalid code. Please enter a 6-digit code.");
             return;
         }
-
+    
+        console.log("✅ Code length is valid, proceeding...");
+        console.log("📧 Sending Email:", pendingUserEmail);
+        
         try {
+            console.log("📤 Sending verification request...");
             const response = await fetch(`${BACKEND_URL}/api/verify-email`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: pendingUserEmail, code }),
             });
-
+    
+            console.log("📥 Response received, parsing JSON...");
             const data = await response.json();
-
+            console.log("🔍 Server Response:", data);
+    
             if (response.ok) {
-                alert("Email verified successfully!");
+                alert("✅ Email verified successfully!");
                 authContainer.style.display = "none";
                 mainContainer.style.display = "block";
             } else {
-                alert(data.error || "Verification failed!");
+                alert("❌ " + (data.error || "Verification failed!"));
             }
         } catch (error) {
-            console.error("Error verifying email:", error);
+            console.error("❌ Error verifying email:", error);
         }
     });
-
+    
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const identifier = loginIdentifier.value.trim();
