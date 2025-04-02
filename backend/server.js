@@ -175,24 +175,28 @@ app.post('/api/verify-email', async (req, res) => {
 
 // ✅ Login API with debug logs
 app.post('/api/login', async (req, res) => {
-    const { username, email, password } = req.body;
-    console.log("🔑 Login attempt:", { username, email });
+    const { username, password } = req.body;
+    console.log("🔑 Login attempt:", { username });
+
+    if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+    }
 
     try {
-        const user = await User.findOne({ $or: [{ username }, { email }] });
+        const user = await User.findOne({ username });
         if (!user) {
             console.log("❌ Login failed: User not found");
-            return res.status(400).json({ error: "Invalid credentials" });
+            return res.status(400).json({ error: "Invalid username or password" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.log("❌ Login failed: Incorrect password");
-            return res.status(400).json({ error: "Invalid credentials" });
+            return res.status(400).json({ error: "Invalid username or password" });
         }
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        console.log(`✅ Login successful for user ${username || email}`);
+        console.log(`✅ Login successful for user ${username}`);
         res.json({ token, userId: user._id });
     } catch (error) {
         console.error("❌ Login error:", error);
