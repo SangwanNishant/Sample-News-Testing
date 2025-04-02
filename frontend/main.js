@@ -12,7 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const signupEmail = document.getElementById("signupEmail");
     const signupPassword = document.getElementById("signupPassword");
 
-    // New verification elements
+    const searchInput = document.getElementById("searchInput");
+    const searchBtn = document.getElementById("searchBtn");
+    const articlesFeed = document.getElementById("articlesFeed");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const BACKEND_URL = "https://sample-news-testing.onrender.com";
+    let pendingUserEmail = "";
+
+    // 🔹 Email Verification Elements
     const verificationContainer = document.createElement("div");
     verificationContainer.innerHTML = `
         <h2>Email Verification</h2>
@@ -23,16 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
     verificationContainer.style.display = "none";
     authContainer.appendChild(verificationContainer);
 
-    authContainer.appendChild(verificationContainer); // ✅ Now it's in the DOM
-
-    // Select AFTER appending
     const verificationCodeInput = verificationContainer.querySelector("#verificationCode");
     const verifyCodeBtn = verificationContainer.querySelector("#verifyCodeBtn");
 
-
-    const BACKEND_URL = "https://sample-news-testing.onrender.com";
-    let pendingUserEmail = ""; // Store email for verification
-
+    // 🔹 Toggle Between Login & Signup
     toggleAuth.addEventListener("click", (e) => {
         e.preventDefault();
         if (loginForm.style.display === "block") {
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // 🔹 Signup with Email Verification
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const username = signupUsername.value.trim();
@@ -82,39 +85,28 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-
-    console.log("📌 Debugging Input Field:", verificationCodeInput);
-    console.log("📌 Input Field Value:", verificationCodeInput?.value);
-
-
+    // 🔹 Verify Email Code
     verifyCodeBtn.addEventListener("click", async () => {
         const code = verificationCodeInput.value.trim();
-        console.log("🔢 Entered Code:", code, "| Length:", code.length); 
-        
         if (code.length !== 6) {
             alert("Invalid code. Please enter a 6-digit code.");
             return;
         }
-    
-        console.log("✅ Code length is valid, proceeding...");
-        console.log("📧 Sending Email:", pendingUserEmail);
-        
+
         try {
-            console.log("📤 Sending verification request...");
             const response = await fetch(`${BACKEND_URL}/api/verify-email`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: pendingUserEmail, code }),
             });
-    
-            console.log("📥 Response received, parsing JSON...");
+
             const data = await response.json();
-            console.log("🔍 Server Response:", data);
-    
+
             if (response.ok) {
                 alert("✅ Email verified successfully!");
                 authContainer.style.display = "none";
                 mainContainer.style.display = "block";
+                fetchAndDisplayNews();
             } else {
                 alert("❌ " + (data.error || "Verification failed!"));
             }
@@ -122,7 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("❌ Error verifying email:", error);
         }
     });
-    
+
+    // 🔹 Login
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const identifier = loginIdentifier.value.trim();
@@ -132,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${BACKEND_URL}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: identifier,  password }),
+                body: JSON.stringify({ username: identifier, password }),
             });
 
             const data = await response.json();
@@ -141,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem("token", data.token);
                 authContainer.style.display = "none";
                 mainContainer.style.display = "block";
+                fetchAndDisplayNews();
             } else {
                 alert(data.error || "Login failed!");
             }
@@ -149,15 +143,72 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // 🔹 Fetch & Display News
+    async function fetchAndDisplayNews(query = "latest") {
+        articlesFeed.innerHTML = "";
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/news?q=${query}`);
+            const newsData = await response.json();
+
+            newsData.articles.slice(0, 7).forEach(async (news) => {
+                const sentiment = await analyzeSentiment(news.title);
+
+                const sentimentClass = sentiment === "POSITIVE" ? "sentiment-positive" :
+                                       sentiment === "NEGATIVE" ? "sentiment-negative" :
+                                       "sentiment-neutral";
+
+                const newsCard = document.createElement("div");
+                newsCard.className = "news-card";
+                newsCard.innerHTML = `
+                    <h3>${news.title}</h3>
+                    <p>${news.description || "No description available"}</p>
+                    <a href="${news.url}" target="_blank">Read More</a>
+                    <span class="sentiment-box ${sentimentClass}">${sentiment}</span>
+                `;
+
+                articlesFeed.appendChild(newsCard);
+            });
+        } catch (error) {
+            console.error("Error fetching news:", error);
+        }
+    }
+
+    // 🔹 Sentiment Analysis
+    async function analyzeSentiment(newsText) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/analyze`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: newsText }),
+            });
+
+            const data = await response.json();
+            return data.sentiment || "Unknown";
+        } catch (error) {
+            console.error("Error analyzing sentiment:", error);
+            return "Unknown";
+        }
+    }
+
+    // 🔹 Search News
+    searchBtn.addEventListener("click", () => {
+        const query = searchInput.value.trim();
+        if (query) fetchAndDisplayNews(query);
+    });
+
+    // 🔹 Logout
     logoutBtn.addEventListener("click", () => {
         localStorage.removeItem("token");
         mainContainer.style.display = "none";
         authContainer.style.display = "block";
     });
 
+    // 🔹 Auto-Login
     const token = localStorage.getItem("token");
     if (token) {
         authContainer.style.display = "none";
         mainContainer.style.display = "block";
+        fetchAndDisplayNews();
     }
 });
